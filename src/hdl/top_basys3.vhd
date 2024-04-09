@@ -92,21 +92,70 @@ end top_basys3;
 architecture top_basys3_arch of top_basys3 is 
   
 	-- declare components and signals
-
+    signal w_clk, w_reset, w_stop, w_up_down : std_logic := '0';
+    signal w_floor: std_logic_vector(3 downto 0) := (others => '0');
+    
+    component sevenSegDecoder is
+        Port ( i_D : in STD_LOGIC_VECTOR (3 downto 0);
+               o_S : out STD_LOGIC_VECTOR (6 downto 0));
+    end component sevenSegDecoder;
+    
+    component elevator_controller_fsm is
+        Port (     i_clk     : in  STD_LOGIC;
+                   i_reset   : in  STD_LOGIC;
+                   i_stop    : in  STD_LOGIC;
+                   i_up_down : in  STD_LOGIC;
+                   o_floor   : out STD_LOGIC_VECTOR (3 downto 0)           
+                 );
+    end component elevator_controller_fsm;
+    
+    component clock_divider is 
+    	generic ( constant k_DIV : natural := 2	); -- How many clk cycles until slow clock toggles
+                                               -- Effectively, you divide the clk double this 
+                                               -- number (e.g., k_DIV := 2 --> clock divider of 4)
+        port (  i_clk    : in std_logic;
+                i_reset  : in std_logic;           -- asynchronous
+                o_clk    : out std_logic           -- divided (slow) clock
+        );
+    end component clock_divider;
   
 begin
 	-- PORT MAPS ----------------------------------------
-
+	   
+	clkdiv_inst : clock_divider 		--instantiation of clock_divider to take 
+        generic map ( k_DIV => 25000000 ) -- 2 Hz Clock
+        port map (                          
+            i_clk   => clk,
+            i_reset => btnL,
+            o_clk   => w_clk 
+        );    
+        
+    elevator_controller_fsm_inst: elevator_controller_fsm
+        port map (
+        i_clk => w_clk,
+        i_reset => (btnR or btnU),
+        i_stop => sw(0),
+        i_up_down => sw(1),
+        o_floor => w_floor
+        );
+        
+    sevenSegDecoder_inst: sevenSegDecoder
+        port map(
+        i_D => w_floor,
+        o_S => seg -- might have to fix this
+        );
+            
 	
 	
 	-- CONCURRENT STATEMENTS ----------------------------
 	
 	-- LED 15 gets the FSM slow clock signal. The rest are grounded.
-	
-
 	-- leave unused switches UNCONNECTED. Ignore any warnings this causes.
-	
+    led <= (15 => w_clk, 2 downto 0 => w_floor, others => '0');
+    	
 	-- wire up active-low 7SD anodes (an) as required
 	-- Tie any unused anodes to power ('1') to keep them off
+	an <= (2 => '0', others => '1');
+
 	
 end top_basys3_arch;
