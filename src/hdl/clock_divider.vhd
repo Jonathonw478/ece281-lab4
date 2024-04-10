@@ -57,7 +57,7 @@ entity clock_divider is
 	port ( 	i_clk    : in std_logic;
 			i_reset  : in std_logic;		   -- asynchronous
 			o_clk    : out std_logic		   -- divided (slow) clock
-	)
+	);
 end clock_divider;
 
 architecture countCompare of clock_divider is
