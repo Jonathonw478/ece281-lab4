@@ -103,3 +103,4 @@ begin
 		
 end behavioral;
 
+-- tens <= '1' when w_floor > 9 else '0';
