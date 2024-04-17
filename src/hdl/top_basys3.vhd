@@ -92,7 +92,7 @@ end top_basys3;
 architecture top_basys3_arch of top_basys3 is 
   
 	-- declare components and signals
-    signal w_clk1, w_clk2, w_reset, w_stop, w_up_down : std_logic := '0';
+    signal w_clk1, w_clk2, w_reset, w_stop, w_up_down, w_reset1 : std_logic := '0';
     signal w_floor, w_tens, w_ones, w_dataTDM, w_sel: std_logic_vector(3 downto 0);
     
     component sevenSegDecoder is
@@ -143,27 +143,29 @@ architecture top_basys3_arch of top_basys3 is
     
 begin
 	-- PORT MAPS ----------------------------------------
-	   
+	
+w_reset1 <= btnL or btnU;   
 	clkdiv_inst1 : clock_divider		--instantiation of clock_divider to take 
         generic map ( k_DIV => 25000000 ) -- 2 Hz Clock
         port map (                          
             i_clk   => clk,
-            i_reset => (btnL or btnU),
+            i_reset => w_reset1,
             o_clk   => w_clk1 
         ); 
-    
+    --
     clkdiv_inst2 : clock_divider
-        generic map (k_DIV => 500000) -- 100 Hz Clock
+        generic map (k_DIV => 50000) -- 1000 Hz Clock
         port map (
             i_clk => clk,
             i_reset => '0',
             o_clk => w_clk2
         );
         
+w_reset <= btnR or btnU;    
     elevator_controller_fsm_inst: elevator_controller_fsm
         port map (
             i_clk => w_clk1,
-            i_reset => (btnR or btnU),
+            i_reset => w_reset,
             i_stop => sw(0),
             i_up_down => sw(1),
             o_floor => w_floor
@@ -184,7 +186,7 @@ begin
             i_D1 => "0000",
             i_D0 => "0000",
             o_data => w_dataTDM,
-            o_sel => w_sel(3 downto 2) -- might have to fix this
+            o_sel => w_sel(3 downto 0) -- might have to fix this
         );
     
 --    floor_inst: floor
@@ -199,12 +201,11 @@ begin
 	
 	-- LED 15 gets the FSM slow clock signal. The rest are grounded.
 	-- leave unused switches UNCONNECTED. Ignore any warnings this causes.
-    led <= (15 => w_clk1, 2 downto 0 => w_floor, others => '0');
+    led <= (15 => w_clk1, 3 => w_floor(3), 2 => w_floor(2), 1 => w_floor(1), 0 => w_floor(0), others => '0');
     	
 	-- wire up active-low 7SD anodes (an) as required
 	-- Tie any unused anodes to power ('1') to keep them off
-	an <= (3 downto 2 => w_sel);
-	an <= (1 downto 0 => '1');
+	an <= (3 => w_sel(3), 2 => w_sel(2), others => '1');
 	
 	w_tens <= "0001" when unsigned(w_floor) > 9 or unsigned(w_floor) = "0000" else "0000";  
 	  
