@@ -144,7 +144,7 @@ architecture top_basys3_arch of top_basys3 is
 begin
 	-- PORT MAPS ----------------------------------------
 	
-w_reset1 <= btnL or btnU;   
+    w_reset1 <= btnL or btnU;   
 	clkdiv_inst1 : clock_divider		--instantiation of clock_divider to take 
         generic map ( k_DIV => 25000000 ) -- 2 Hz Clock
         port map (                          
@@ -161,7 +161,7 @@ w_reset1 <= btnL or btnU;
             o_clk => w_clk2
         );
         
-w_reset <= btnR or btnU;    
+    w_reset <= btnR or btnU;    
     elevator_controller_fsm_inst: elevator_controller_fsm
         port map (
             i_clk => w_clk1,
@@ -207,7 +207,7 @@ w_reset <= btnR or btnU;
 	-- Tie any unused anodes to power ('1') to keep them off
 	an <= (3 => w_sel(3), 2 => w_sel(2), others => '1');
 	
-	w_tens <= "0001" when unsigned(w_floor) > 9 or unsigned(w_floor) = "0000" else "0000";  
+	w_tens <= "0001" when unsigned(w_floor) > 9 or w_floor = "0000" else "0000";  
 	  
     w_ones <= "0000" when unsigned(w_floor) = 10 else
               "0001" when unsigned(w_floor) = 11 else
